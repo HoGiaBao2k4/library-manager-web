@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Thư viện</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <h1>Hệ thống Quản lý Thư viện</h1>
+
+  <form method="POST" action="/add">
+    <input type="text" name="title" placeholder="Tên sách" required>
+    <input type="text" name="author" placeholder="Tác giả" required>
+    <input type="text" name="image" placeholder="Link ảnh (tùy chọn)">
+    <button type="submit">Thêm sách</button>
+  </form>
+
+  <h2>Danh sách sách:</h2>
+  <ul>
+    {% for book in books %}
+      <li>
+        {% if book.image %}
+          <img src="{{ book.image }}" alt="Ảnh sách" style="height: 100px; display:block; margin-bottom:5px;">
+        {% endif %}
+        <strong>{{ book.title }}</strong> - {{ book.author }}
+        <a href="/delete/{{ loop.index0 }}">[Xóa]</a>
+      </li>
+    {% else %}
+      <li>Chưa có sách nào.</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
