@@ -1,18 +1,26 @@
 from flask import Flask, render_template, request, redirect
-
 import pymysql
 import os
 
-conn = pymysql.connect(
-    host=os.getenv('DB_HOST'),
-    user=os.getenv('DB_USER'),
-    password=os.getenv('DB_PASS'),
-    database=os.getenv('DB_NAME'),
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor
-)
-
 app = Flask(__name__)
+
+# 👉 CHỈ tạo kết nối khi cần, không crash app nếu chưa set biến môi trường
+def get_db_connection():
+    try:
+        conn = pymysql.connect(
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASS'),
+            database=os.getenv('DB_NAME'),
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
+        return conn
+    except Exception as e:
+        print("⚠️ Lỗi kết nối MySQL:", e)
+        return None
+
+# Dữ liệu mẫu để test giao diện trước khi kết nối DB thật
 books = [
     {
         'title': 'Đắc Nhân Tâm',
@@ -42,6 +50,13 @@ def add_book():
     image = request.form.get('image')
     if title and author:
         books.append({'title': title, 'author': author, 'image': image})
+        # 👉 Sau này có thể thêm đoạn insert DB tại đây, ví dụ:
+        # conn = get_db_connection()
+        # if conn:
+        #     with conn.cursor() as cursor:
+        #         cursor.execute("INSERT INTO books (title, author, image) VALUES (%s, %s, %s)", (title, author, image))
+        #     conn.commit()
+        #     conn.close()
     return redirect('/')
 
 @app.route('/delete/<int:index>')
@@ -52,3 +67,5 @@ def delete_book(index):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+refactor app.py: dùng get_db_connection()
