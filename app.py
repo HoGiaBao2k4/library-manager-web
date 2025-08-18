@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# Tạo kết nối MySQL khi cần (không làm app crash nếu chưa cấu hình ENV)
+# 👉 Hàm tạo kết nối DB (chỉ dùng khi có biến môi trường DB_* đã set trên Render)
 def get_db_connection():
     try:
         conn = pymysql.connect(
@@ -20,7 +20,7 @@ def get_db_connection():
         print("⚠️ Lỗi kết nối MySQL:", e)
         return None
 
-# Dữ liệu mẫu để test UI trước khi nối DB thật
+# Dữ liệu mẫu để test giao diện trước khi kết nối DB thật
 books = [
     {
         'title': 'Đắc Nhân Tâm',
@@ -39,40 +39,38 @@ books = [
     }
 ]
 
-@app.route("/health")
-def health():
-    return "ok", 200
-
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("index.html", books=books)
+    # 👉 sau này có thể query từ DB thay vì dùng list mẫu
+    return render_template('index.html', books=books)
 
-@app.route("/add", methods=["POST"])
+@app.route('/add', methods=['POST'])
 def add_book():
-    title = request.form.get("title")
-    author = request.form.get("author")
-    image = request.form.get("image")
+    title = request.form.get('title')
+    author = request.form.get('author')
+    image = request.form.get('image')
+
     if title and author:
-        books.append({"title": title, "author": author, "image": image})
-        # Sau này có thể ghi vào DB:
+        books.append({'title': title, 'author': author, 'image': image})
+
+        # 👉 nếu muốn lưu DB thật thì mở đoạn này
         # conn = get_db_connection()
         # if conn:
-        #     with conn.cursor() as cur:
-        #         cur.execute(
+        #     with conn.cursor() as cursor:
+        #         cursor.execute(
         #             "INSERT INTO books (title, author, image) VALUES (%s, %s, %s)",
-        #             (title, author, image),
+        #             (title, author, image)
         #         )
         #     conn.commit()
         #     conn.close()
-    return redirect("/")
 
-@app.route("/delete/<int:index>")
+    return redirect('/')
+
+@app.route('/delete/<int:index>')
 def delete_book(index):
     if 0 <= index < len(books):
         books.pop(index)
-    return redirect("/")
+    return redirect('/')
 
-if __name__ == "__main__":
-    # Chạy local/dev; trên Render dùng gunicorn (start command) nên block này không chạy
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=10000, debug=True)
